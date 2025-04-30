@@ -1,93 +1,44 @@
-===========================
-Python Packaging User Guide
-===========================
+import random
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext
 
-.. meta::
-   :description: The Python Packaging User Guide (PyPUG) is a collection of tutorials and guides for packaging Python software.
-   :keywords: python, packaging, guide, tutorial
+# Размеры поля и количество мин
+FIELD_SIZE = 5
+MINES_COUNT = 3
 
-.. toctree::
-   :maxdepth: 2
-   :hidden:
+class Minesweeper:
+    def init(self):
+        self.field = [[' ' for _ in range(FIELD_SIZE)] for _ in range(FIELD_SIZE)]
+        self.mines = set()
+        self.generate_mines()
 
-   overview
-   flow
-   tutorials/index
-   guides/index
-   discussions/index
-   specifications/index
-   key_projects
-   glossary
-   support
-   contribute
-   news
+    def generate_mines(self):
+        while len(self.mines) < MINES_COUNT:
+            x = random.randint(0, FIELD_SIZE - 1)
+            y = random.randint(0, FIELD_SIZE - 1)
+            self.mines.add((x, y))
+            self.field[x][y] = '*'
 
-Welcome to the *Python Packaging User Guide*, a collection of tutorials and
-references to help you distribute and install Python packages with modern
-tools.
+    def display_field(self):
+        return '\n'.join([' '.join(row) for row in self.field])
 
-This guide is maintained on `GitHub`_ by the :doc:`Python Packaging Authority <pypa:index>`. We
-happily accept :doc:`contributions and feedback <contribute>`. 😊
+def start(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text('Привет! Введите /play для начала игры.')
 
-.. _GitHub: https://github.com/pypa/packaging.python.org
+def play(update: Update, context: CallbackContext) -> None:
+    game = Minesweeper()
+    context.user_data['game'] = game
+    update.message.reply_text('Игра началась! Вот ваше поле:\n' + game.display_field())
 
+def main() -> None:
+    updater = Updater("7799933106:AAEpBEQgzV2ItWvqwPTlYMSbnbCEKsqMH-k")
 
-Overview and Flow
-=================
+    dispatcher = updater.dispatcher
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("play", play))
 
-.. note::
+    updater.start_polling()
+    updater.idle()
 
-   Building your understanding of Python packaging is a journey. Patience and
-   continuous improvement are key to success. The overview and flow sections
-   provide a starting point for understanding the Python packaging ecosystem.
-
-The :doc:`overview` explains Python packaging
-and its use when preparing and distributing projects.
-This section helps you build understanding about selecting the tools and
-processes that are most suitable for your use case.
-It includes what packaging is, the problems that it solves, and
-key considerations.
-
-To get an overview of the workflow used to publish your code, see
-:doc:`packaging flow <flow>`.
-
-Tutorials
-=========
-
-Tutorials walk through the steps needed to complete a project for the first time.
-Tutorials aim to help you succeed and provide a starting point for future
-exploration.
-The :doc:`tutorials/index` section includes:
-
-* A :doc:`tutorial on installing packages <tutorials/installing-packages>`
-* A :doc:`tutorial on managing application dependencies <tutorials/managing-dependencies>`
-  in a version controlled project
-* A :doc:`tutorial on packaging and distributing <tutorials/packaging-projects>`
-  your project
-
-Guides
-======
-
-Guides provide steps to perform a specific task. Guides are more focused on
-users who are already familiar with Python packaging and are looking for
-specific information.
-
-The :doc:`guides/index` section provides "how to" instructions in three major
-areas: package installation; building and distributing packages; miscellaneous
-topics.
-
-Explanations and Discussions
-============================
-
-The :doc:`discussions/index` section for in-depth explanations and discussion
-about topics, such as:
-
-* :doc:`discussions/deploying-python-applications`
-* :doc:`discussions/pip-vs-easy-install`
-
-Reference
-=========
-
-* The :doc:`specifications/index` section for packaging interoperability specifications.
-* The list of :doc:`other projects <key_projects>` maintained by members of the Python Packaging Authority.
-* The :doc:`glossary` for definitions of terms used in Python packaging.
+if name == 'main':
+    main()
